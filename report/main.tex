@@ -13,7 +13,9 @@
 
 Locusts are well-known for their collective motion, where individuals alternate between solitary and gregarious phases. Modeling this behavior has been an active area of research, ranging from simple self-propelled particle (SPP) models to biologically detailed pause-and-go dynamics \cite{ariel2015locust}.  
 
-In this project, we implement a minimal ODE-based model of locust collective motion. Each agent is represented by its position, heading, and an internal activity variable. We study how local neighbor interactions and stochasticity lead to the emergence of synchronized swarming. Our goals are to (i) situate the model in relation to existing work, (ii) clarify its assumptions and simplifications, (iii) define all parameters and variables with units, and (iv) evaluate robustness via parameter sweeps and heatmaps.
+In this project, we implement a minimal ODE-based model of locust collective motion. Each agent is represented by its position, heading, and an internal \emph{continuous activity variable}. This variable replaces the discrete pause/go states used in previous models. Biologically, it can be interpreted as a measure of locomotor readiness: $a=0$ corresponds to being fully paused, $a=1$ to full walking, and intermediate values to gradual activation or partial movement. Such a representation is consistent with observations that locusts accelerate gradually and that their responsiveness to neighbors increases smoothly with group density.  
+
+Our goals are to (i) situate the model in relation to existing work, (ii) clarify its assumptions and simplifications, (iii) define all parameters and variables with units, and (iv) evaluate robustness via parameter sweeps and heatmaps.
 
 \section{Relation to Existing Models}
 
@@ -25,7 +27,7 @@ Ariel and Ayali (2015) review several frameworks for modeling locust collective 
     \item \textbf{Escape-and-pursuit models}, motivated by cannibalism hypotheses, where individuals pursue those ahead and flee from those behind.
 \end{itemize}
 
-Our approach is closest to the Vicsek/Czirók family of models. The main distinction is that we introduce a continuous-valued activity variable $a \in [0,1]$ instead of a discrete pause/go state. This simplification allows us to explore threshold and saturation effects via a sigmoid activation function, while keeping the model tractable for robustness analysis.
+Our approach is closest to the Vicsek/Czirók family of models but introduces an important modification. Instead of discrete pause/go states, we use a continuous-valued activity variable $a \in [0,1]$. This captures the same social dependence as the pause-and-go model but softens it into a smooth dynamical variable. The advantage is twofold: (i) it allows a natural biological interpretation as varying degrees of locomotor activation, and (ii) it yields a mathematically tractable ODE formulation suitable for robustness analysis.
 
 \section{Model Definition}
 
@@ -41,7 +43,10 @@ Activity relaxes toward a sigmoid function of neighbor count $n_i$:
 \[
 \frac{da_i}{dt} = -\frac{1}{\tau_a}\Big(a_i - \sigma(\beta_0 + \beta_1 n_i)\Big),
 \]
-where $\tau_a$ (s) is the relaxation timescale, $\beta_0$ is the baseline bias, and $\beta_1$ is the social activation gain. The sigmoid ensures thresholded, saturating influence of neighbors.
+where $\tau_a$ (s) is the relaxation timescale, $\beta_0$ is the baseline bias, and $\beta_1$ is the social activation gain. 
+
+The sigmoid function is chosen because it reflects biological observations: locusts are unlikely to move when alone, activity increases sharply once a threshold number of neighbors is present, and eventually saturates when the group is large. This threshold–saturation shape cannot be captured by a linear rule. From a modeling perspective, the sigmoid is smooth and bounded between 0 and 1, making it both biologically plausible and mathematically convenient for ODE analysis.
+
 
 \subsection{Velocity}
 Speed interpolates between minimum and maximum values depending on activity:
@@ -110,9 +115,9 @@ Heatmaps illustrating these results are included as figures (not shown in this t
 
 \section{Discussion}
 
-Our model differs from prior work in that it uses a continuous activity variable rather than a binary pause/go state. This choice simplifies the dynamics while preserving threshold and saturation effects observed in experiments. Robustness analysis confirms that swarming arises only when alignment strength and social activation are sufficiently large, consistent with prior studies.
+Our model differs from prior work in that it uses a continuous activity variable rather than a binary pause/go state. Biologically, this can be interpreted as a measure of \emph{locomotor readiness} or gradual acceleration: locusts do not always switch instantly between full pausing and full walking, but may exhibit intermediate levels of movement or responsiveness to neighbors. From a modeling perspective, this continuous formulation smooths out discontinuities, simplifies numerical analysis, and retains the threshold/saturation effects central to pause–and–go dynamics.  
 
-While our model does not capture all biological details (e.g., discrete pausing, escape-and-pursuit asymmetries), it highlights the minimal ingredients necessary for collective order. According to Ariel and Ayali (2015), such simplified models are valuable for understanding general principles of swarm dynamics, even if they abstract away some biological realism.
+Robustness analysis confirms that swarming arises only when alignment strength and social activation are sufficiently large, consistent with prior studies. While our model does not capture all biological details (e.g., discrete pausing, escape-and-pursuit asymmetries), it highlights the minimal ingredients necessary for collective order. According to Ariel and Ayali (2015), such simplified models are valuable for understanding general principles of swarm dynamics, even if they abstract away some biological realism.
 
 \section{Conclusion}
 
