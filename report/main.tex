@@ -14,18 +14,38 @@
 
 Locusts are well-known for their collective motion, where individuals alternate between solitary and gregarious phases. Modeling this behavior has been an active area of research, ranging from simple self-propelled particle (SPP) models to biologically detailed pause-and-go dynamics \cite{ariel2015locust}.  
 
-In this project, we implement a minimal ODE-based model of locust collective motion. Each agent is represented by its position, heading, and an internal \emph{continuous activity variable}. This variable replaces the discrete pause/go states used in previous models. Biologically, it can be interpreted as a measure of locomotor readiness: $a=0$ corresponds to being fully paused, $a=1$ to full walking, and intermediate values to gradual activation or partial movement. Such a representation is consistent with observations that locusts accelerate gradually and that their responsiveness to neighbors increases smoothly with group density.  
+Recent studies have shown that locust collective motion relies critically on \emph{pause-and-go dynamics}, in which individuals alternate between walking bouts and pauses. This intermittent locomotion is more than a mechanical artifact: it plays a central role in swarm cohesion and decision-making. Ariel et al. (2014) demonstrated that the timing of pauses carries signatures of memory and sensory integration, and that repeated pause/go decisions at the individual level drive the formation and maintenance of collective order in marching bands \cite{ariel2014pausego}. More recently, Aidan et al. (2024) showed that pauses are privileged moments for visual processing, with locusts most likely to align with neighbors when stimuli are presented during pauses  \cite{aidan2024pausing}. Together, these findings establish pause-and-go as a fundamental behavioral mechanism supporting swarm organization.  
 
-Our goals are to (i) situate the model in relation to existing work, (ii) clarify its assumptions and simplifications, (iii) define all parameters and variables with units, and (iv) evaluate robustness via parameter sweeps and heatmaps.
+In parallel, mathematical models have begun to capture these dynamics explicitly. Bernoff et al. (2020) developed an agent-based model and a companion PDE framework for the Australian plague locust, in which individuals switch between stationary (feeding) and moving states depending on local resource density. Their results demonstrate that resource-mediated transitions are sufficient to generate realistic hopper band fronts and traveling pulse structures \cite{bernoff2020agentbased}. While this work highlights the importance of foraging and vegetation depletion in shaping swarm morphology, our focus is narrower. We introduce a minimal continuous framework that abstracts the pause/go mechanism into a single activity variable, allowing us to explore how locomotor readiness and neighbor influence alone can generate collective motion, without explicitly modeling resource--behavior coupling.  
+
+In this project, we therefore implement a minimal ODE-based model of locust collective motion. Each agent is represented by its position, heading, and an internal \emph{continuous activity variable}. This variable replaces the discrete pause/go states used in previous models. Biologically, it can be interpreted as a measure of locomotor readiness: $a=0$ corresponds to being fully paused, $a=1$ to full walking, and intermediate values to gradual activation or partial movement. Such a representation is consistent with observations that locusts accelerate gradually and that their responsiveness to neighbors increases smoothly with group density.  
+
+Our goals are to (i) situate the model in relation to existing work, (ii) clarify its assumptions and simplifications, (iii) define all parameters and variables with units, and (iv) evaluate robustness via parameter sweeps and heatmaps.  
+
+% \section{Relation to Existing Models}
+
+% Ariel and Ayali (2015) review several frameworks for modeling locust collective motion:
+% \begin{itemize}
+%     \item The \textbf{Czirók model}, a 1D variant of the Vicsek self-propelled particle model, where individuals align to neighbors within a radius plus noise.
+%     \item The \textbf{Buhl model}, a refinement that adds persistence in direction, fitted to ring-arena experiments.
+%     \item The \textbf{Pause-and-go model}, where locusts switch between discrete moving and paused states, based on experimental observations of intermittent locomotion.
+%     \item \textbf{Escape-and-pursuit models}, motivated by cannibalism hypotheses, where individuals pursue those ahead and flee from those behind.
+% \end{itemize}
+
+% Our approach is closest to the Vicsek/Czirók family of models but introduces an important modification. Instead of discrete pause/go states, we use a continuous-valued activity variable $a \in [0,1]$. This captures the same social dependence as the pause-and-go model but softens it into a smooth dynamical variable. The advantage is twofold: (i) it allows a natural biological interpretation as varying degrees of locomotor activation, and (ii) it yields a mathematically tractable ODE formulation suitable for robustness analysis.
 
 \section{Relation to Existing Models}
 
 Ariel and Ayali (2015) review several frameworks for modeling locust collective motion:
+
 \begin{itemize}
-    \item The \textbf{Czirók model}, a 1D variant of the Vicsek self-propelled particle model, where individuals align to neighbors within a radius plus noise.
-    \item The \textbf{Buhl model}, a refinement that adds persistence in direction, fitted to ring-arena experiments.
-    \item The \textbf{Pause-and-go model}, where locusts switch between discrete moving and paused states, based on experimental observations of intermittent locomotion.
-    \item \textbf{Escape-and-pursuit models}, motivated by cannibalism hypotheses, where individuals pursue those ahead and flee from those behind.
+    \item The \textbf{Czirók model} \cite{czirok1999collective}, a 1D variant of the Vicsek self-propelled particle model \cite{vicsek1995novel}, where individuals update their direction by aligning with the local average orientation of neighbors within an interaction radius, subject to noise. It captures order--disorder transitions and has been influential in statistical physics approaches to collective motion.
+
+    \item The \textbf{Buhl model} \cite{buhl2006disorder}, a refinement motivated by ring-arena experiments, which adds persistence in direction. In this model, individuals weight their own previous heading against the local average, reproducing switching between clockwise and counter-clockwise marching observed in arenas.
+
+    \item The \textbf{Pause-and-go model} \cite{ariel2014pausego}, derived from experimental observations that locusts exhibit intermittent motion composed of walking bouts and pauses. Individuals switch between discrete ``moving'' and ``paused'' states, with the probability of initiating movement depending on the number of walking neighbors. This framework highlights the role of intermittent locomotion in swarm cohesion.
+
+    \item \textbf{Escape-and-pursuit (E\&P) models} \cite{romanczuk2012active}, motivated by the hypothesis that cannibalism drives collective motion. Here, individuals pursue conspecifics in front while escaping those approaching from behind. Although conceptually appealing, this mechanism has mixed empirical support in locusts.
 \end{itemize}
 
 Our approach is closest to the Vicsek/Czirók family of models but introduces an important modification. Instead of discrete pause/go states, we use a continuous-valued activity variable $a \in [0,1]$. This captures the same social dependence as the pause-and-go model but softens it into a smooth dynamical variable. The advantage is twofold: (i) it allows a natural biological interpretation as varying degrees of locomotor activation, and (ii) it yields a mathematically tractable ODE formulation suitable for robustness analysis.
@@ -146,6 +166,16 @@ Fukuchi CA, Fukuchi RK, Duarte M. (2019). Effects of walking speed on gait biome
 Ariel G, Ophir Y, Levi S, Ben-Jacob E, Ayali A (2014) Individual Pause-and-Go Motion Is Instrumental to the Formation and Maintenance of Swarms of Marching Locust Nymphs. \emph{PLoS ONE} 9(7).
 \bibitem{aidan2024pausing}
 Aidan Y, Bleichman I, Ayali A (2024) Pausing to swarm: locust intermittent motion is instrumental for swarming-related visual processing. \emph{Biology Letters}, 2020230468.
+\bibitem{bernoff2020agentbased}
+Bernoff AJ, Culshaw-Maurer M, Everett RA, Hohn ME, Strickland WC, Weinburd J (2020) Agent-based and continuous models of hopper bands for the Australian plague locust: How resource consumption mediates pulse formation and geometry. \emph{PLoS Computational Biology} 16(5).
+\bibitem{czirok1999collective}
+Czirók A, Barabasi AL, Vicsek T (1999). Collective motion of self-propelled particles: kinetic phase transition in one dimension. \emph{Phys. Rev. Lett.} 82, 209.
+\bibitem{vicsek1995novel}
+Vicsek T, Czirók A, Ben-Jacob E, Cohen I, Shochet O (1995) Novel type of phase transition in a system of self-driven particles. \emph{Physical Rev Letters} 75(6):1226.
+\bibitem{buhl2006disorder}
+Buhl J, Sumpter DJT, Couzin ID, Hale JJ, Despland E, Miller ER, Simpson SJ (2006) From disorder to order in marching locusts. \emph{Science} 312(5778): 1402–1406.
+\bibitem{romanczuk2012active}
+Romanczuk P., Bar M, Ebeling W., Linder B., Schimansky-Geier L. (2012). Active Brownian particles from individuals to collective stochastic dynamics. \emph{European Physical Journal-Special Topics} I 202 (1): 1–162.
 \end{thebibliography}
 
 \end{document}
