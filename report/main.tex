@@ -1,5 +1,6 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage{amsmath,amssymb,graphicx,booktabs,geometry}
+\usepackage{float}
 \geometry{margin=1in}
 
 \title{Modeling Locust Swarming with a Continuous-Activity ODE Model}
@@ -108,10 +109,25 @@ which quantifies directional synchrony ($P=0$ = disorder, $P=1$ = perfect alignm
 \subsection{Scan 1: $\kappa$ vs $R$}
 Polarization increases sharply when both alignment strength and vision radius exceed threshold values, reproducing the phase-transition–like behavior described in Vicsek-style models.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{k_vs_r.png}
+    \caption{Polarization results for Scan 1: $\kappa$ vs $R$. 
+    Higher alignment strength and vision radius produce stronger directional synchrony.}
+    \label{fig:scan1}
+\end{figure}
+
+
 \subsection{Scan 2: $\kappa$ vs $\beta_1$}
 Social activation enhances collective order: for high $\beta_1$, polarization rises at lower $\kappa$. This shows that intermittent movement dynamics, even when simplified to a continuous activity variable, strongly influence swarm coherence.
 
-Heatmaps illustrating these results are included as figures (not shown in this text draft).
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{k_vs_b1.png}
+    \caption{Polarization across $\kappa$ vs $\beta_1$. Stronger social activation 
+    shifts the order–disorder transition to lower $\kappa$ values.}
+    \label{fig:scan2}
+\end{figure}
 
 \section{Discussion}
 
@@ -121,13 +137,13 @@ Robustness analysis confirms that swarming arises only when alignment strength a
 
 \section{Conclusion}
 
-We implemented and analyzed a continuous-activity ODE model of locust swarming. Our work shows that simple local rules—alignment, social activation, and noise—are sufficient to generate robust collective motion. By situating this model within the broader literature, we demonstrate both how it simplifies existing frameworks and what insights it contributes. The approach also emphasizes the importance of robustness checks and parameter documentation, ensuring reproducibility and interpretability.
+We implemented and analyzed a continuous-activity ODE model of locust swarming. Our work shows that simple local rules (alignment, social activation, and noise) are sufficient to generate robust collective motion. By situating this model within the broader literature, we demonstrate both how it simplifies existing frameworks and what insights it contributes. The approach also emphasizes the importance of robustness checks and parameter documentation, ensuring reproducibility and interpretability.
 
 \begin{thebibliography}{9}
 \bibitem{ariel2015locust}
 Ariel, G., \& Ayali, A. (2015). Locust collective motion and its modeling. \emph{PLoS Computational Biology}, 11(12), e1004522.
 \bibitem{fukuchi2019gait}
-Fukuchi, C. A., Duarte, M., \& Bastos, F. (2019). Effects of walking speed on gait biomechanics in healthy participants: a systematic review and meta-analysis. \emph{Systematic Reviews}, 8, 153.
+Fukuchi CA, Fukuchi RK, Duarte M. (2019). Effects of walking speed on gait biomechanics in healthy participants: a systematic review and meta-analysis. \emph{Systematic Reviews}, 8, 153.
 \end{thebibliography}
 
 \end{document}
