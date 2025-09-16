@@ -35,7 +35,7 @@ Our approach is closest to the Vicsek/Czirók family of models but introduces an
 Each locust is described by:
 \begin{itemize}
     \item \textbf{Position:} $(x,y)$, coordinates in a periodic square domain of side length $L$ (m).
-    \item \textbf{Heading:} $\theta$, orientation of movement (radians).
+    \item \textbf{Direction:} $\theta$, orientation of movement (radians).
     \item \textbf{Activity:} $a \in [0,1]$, continuous locomotion variable (0 = paused, 1 = fully moving).
 \end{itemize}
 
@@ -46,17 +46,17 @@ Activity relaxes toward a sigmoid function of neighbor count $n_i$:
 \]
 where $\tau_a$ (s) is the relaxation timescale, $\beta_0$ is the baseline bias, and $\beta_1$ is the social activation gain.
 
-The sigmoid captures biologically plausible graded transitions: in many animal systems, locomotion does not engage instantly but ramps up—speed, gait, and responsiveness transition continuously. For instance, studies of human gait show that increases in walking speed yield smooth changes in joint kinematics and ground-reaction forces, rather than abrupt jumps \cite{fukuchi2019gait}. Thus, our model's continuous activity variable is inspired by such gradual biomechanical activation, and offers a realistic, smooth analogue to the binary pause–go concept.
+The sigmoid represents biologically plausible graded transitions: in many animal systems, movement does not engage instantly but ramps up. Speed, gait, and responsiveness transition continuously. For instance, studies of human gait show that increases in walking speed yield smooth changes in joint kinematics and ground-reaction forces, rather than abrupt jumps \cite{fukuchi2019gait}. Our model's continuous activity variable is inspired by such gradual biomechanical activation, and offers a realistic, smooth analogue to the binary pause–go concept.
 
 
 \subsection{Velocity}
-Speed interpolates between minimum and maximum values depending on activity:
+Speed varies between minimum and maximum values depending on activity:
 \[
 v_i = v_{\min} + (v_{\max} - v_{\min}) a_i.
 \]
 
-\subsection{Heading dynamics}
-Headings evolve by alignment with neighbors plus angular noise:
+\subsection{Direction dynamics}
+Directions evolve by alignment with neighbors plus noise:
 \[
 \frac{d\theta_i}{dt} = \kappa \cdot \langle \sin(\theta_j - \theta_i)\rangle + \sqrt{2\eta}\,\xi,
 \]
@@ -100,32 +100,30 @@ seed & Random seed & --- & 42 \\
 
 \section{Robustness Analysis}
 
-To test robustness, we performed 2D parameter scans. For each combination of parameters, we measured the \textbf{polarization}, defined as
+To test robustness, we ran parameter scans. For each case we measured the \textbf{polarization}:
 \[
-P = \sqrt{\Big(\frac{1}{N}\sum_i \cos \theta_i\Big)^2 + \Big(\frac{1}{N}\sum_i \sin \theta_i\Big)^2},
+P = \sqrt{\Big(\frac{1}{N}\sum_i \cos \theta_i\Big)^2 + \Big(\frac{1}{N}\sum_i \sin \theta_i\Big)^2}.
 \]
-which quantifies directional synchrony ($P=0$ = disorder, $P=1$ = perfect alignment).
+
+$P=0$ means complete disorder; $P=1$ means perfect alignment.
 
 \subsection{Scan 1: $\kappa$ vs $R$}
-Polarization increases sharply when both alignment strength and vision radius exceed threshold values, reproducing the phase-transition–like behavior described in Vicsek-style models.
+Polarization rises sharply when both alignment strength and vision radius are above threshold values, similar to the phase transition seen in Vicsek models.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{k_vs_r.png}
-    \caption{Polarization results for Scan 1: $\kappa$ vs $R$. 
-    Higher alignment strength and vision radius produce stronger directional synchrony.}
+    \caption{Polarization results for Scan 1 ($\kappa$ vs $R$). Stronger alignment and vision radius increase group order.}
     \label{fig:scan1}
 \end{figure}
 
-
 \subsection{Scan 2: $\kappa$ vs $\beta_1$}
-Social activation enhances collective order: for high $\beta_1$, polarization rises at lower $\kappa$. This shows that intermittent movement dynamics, even when simplified to a continuous activity variable, strongly influence swarm coherence.
+With higher social activation $\beta_1$, swarms form more easily: polarization grows at lower $\kappa$ values. This shows that even a simple activity variable strongly shapes group order.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{k_vs_b1.png}
-    \caption{Polarization across $\kappa$ vs $\beta_1$. Stronger social activation 
-    shifts the order–disorder transition to lower $\kappa$ values.}
+    \caption{Polarization across $\kappa$ vs $\beta_1$. Stronger social activation lowers the threshold for collective order.}
     \label{fig:scan2}
 \end{figure}
 
