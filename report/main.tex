@@ -22,18 +22,6 @@ In this project, we therefore implement a minimal ODE-based model of locust coll
 
 Our goals are to (i) situate the model in relation to existing work, (ii) clarify its assumptions and simplifications, (iii) define all parameters and variables with units, and (iv) evaluate robustness via parameter sweeps and heatmaps.  
 
-% \section{Relation to Existing Models}
-
-% Ariel and Ayali (2015) review several frameworks for modeling locust collective motion:
-% \begin{itemize}
-%     \item The \textbf{Czirók model}, a 1D variant of the Vicsek self-propelled particle model, where individuals align to neighbors within a radius plus noise.
-%     \item The \textbf{Buhl model}, a refinement that adds persistence in direction, fitted to ring-arena experiments.
-%     \item The \textbf{Pause-and-go model}, where locusts switch between discrete moving and paused states, based on experimental observations of intermittent locomotion.
-%     \item \textbf{Escape-and-pursuit models}, motivated by cannibalism hypotheses, where individuals pursue those ahead and flee from those behind.
-% \end{itemize}
-
-% Our approach is closest to the Vicsek/Czirók family of models but introduces an important modification. Instead of discrete pause/go states, we use a continuous-valued activity variable $a \in [0,1]$. This captures the same social dependence as the pause-and-go model but softens it into a smooth dynamical variable. The advantage is twofold: (i) it allows a natural biological interpretation as varying degrees of locomotor activation, and (ii) it yields a mathematically tractable ODE formulation suitable for robustness analysis.
-
 \section{Relation to Existing Models}
 
 Ariel and Ayali (2015) review several frameworks for modeling locust collective motion:
@@ -54,36 +42,43 @@ Our approach is closest to the Vicsek/Czirók family of models but introduces an
 
 Each locust is described by:
 \begin{itemize}
-    \item \textbf{Position:} $(x,y)$, coordinates in a periodic square domain of side length $L$ (m).
+    \item \textbf{Position:} $(x,y)$, coordinates in a periodic square domain of side length $L$ (m). Periodic boundary conditions mean that when an individual crosses one boundary, it re-enters from the opposite side, effectively creating a toroidal space. This avoids artificial edge effects.
     \item \textbf{Direction:} $\theta$, orientation of movement (radians).
     \item \textbf{Activity:} $a \in [0,1]$, continuous locomotion variable (0 = paused, 1 = fully moving).
 \end{itemize}
 
 \subsection{Activity dynamics}
 Activity relaxes toward a sigmoid function of neighbor count $n_i$:
-\[
+\begin{equation}
 \frac{da_i}{dt} = -\frac{1}{\tau_a}\Big(a_i - \sigma(\beta_0 + \beta_1 n_i)\Big),
-\]
-where $\tau_a$ (s) is the relaxation timescale, $\beta_0$ is the baseline bias, and $\beta_1$ is the social activation gain.
+\label{eq:activity}
+\end{equation}
+where $\tau_a$ (s) is the relaxation timescale, $\beta_0$ is the baseline bias, and $\beta_1$ is the social activation gain.  
 
-The sigmoid represents biologically plausible graded transitions: in many animal systems, movement does not engage instantly but ramps up. Speed, gait, and responsiveness transition continuously. For instance, studies of human gait show that increases in walking speed yield smooth changes in joint kinematics and ground-reaction forces, rather than abrupt jumps \cite{fukuchi2019gait}. Our model's continuous activity variable is inspired by such gradual biomechanical activation, and offers a realistic, smooth analogue to the binary pause–go concept.
+Neighbors $n_i$ are defined as the number of individuals within a vision radius $R$ of agent $i$. In our implementation, each neighbor contributes equally, but one possible extension is to weight neighbors by inverse distance, reflecting stronger influence from nearby individuals.
 
+The sigmoid represents biologically plausible graded transitions: in many animal systems, movement does not engage instantly but ramps up. Speed, gait, and responsiveness transition continuously \cite{fukuchi2019gait}. Our model's continuous activity variable is inspired by such gradual biomechanical activation, and offers a realistic, smooth analogue to the binary pause--go concept.
 
 \subsection{Velocity}
 Speed varies between minimum and maximum values depending on activity:
-\[
+\begin{equation}
 v_i = v_{\min} + (v_{\max} - v_{\min}) a_i.
-\]
+\label{eq:velocity}
+\end{equation}
+We chose $v_{\min} > 0$ to reflect that even ``paused'' locusts may exhibit micro-movements or shuffling rather than being perfectly stationary. This ensures smoother dynamics. Setting $v_{\min}=0$ is possible but makes simulations numerically less stable.
 
 \subsection{Direction dynamics}
 Directions evolve by alignment with neighbors plus noise:
-\[
+\begin{equation}
 \frac{d\theta_i}{dt} = \kappa \cdot \langle \sin(\theta_j - \theta_i)\rangle + \sqrt{2\eta}\,\xi,
-\]
-where $\kappa$ is alignment strength, $\eta$ is noise intensity (rad$^2$/s), and $\xi$ is Gaussian white noise.
+\label{eq:direction}
+\end{equation}
+where $\kappa$ is alignment strength, $\eta$ is noise intensity (rad$^2$/s), and $\xi$ is Gaussian white noise.  
+The sine of the angle difference is standard in Vicsek/Czirók models: it ensures that alignment forces increase with angular difference and vanish when orientations coincide.
 
 \subsection{Domain}
-Motion occurs in a square domain with periodic boundary conditions.
+Motion occurs in a square domain with periodic boundary conditions, as defined above.
+
 
 \section{Parameters and Variables}
 
@@ -138,53 +133,69 @@ Polarization rises sharply when both alignment strength and vision radius are ab
 \end{figure}
 
 \subsection{Scan 2: $\kappa$ vs $\beta_1$}
-With higher social activation $\beta_1$, swarms form more easily: polarization grows at lower $\kappa$ values. This shows that even a simple activity variable strongly shapes group order.
+Figure~\ref{fig:scan2} shows polarization across values of alignment strength $\kappa$ and social activation gain $\beta_1$. 
+The dominant effect comes from $\kappa$: when $\kappa \lesssim 1.5$, polarization remains low regardless of $\beta_1$. 
+At higher $\kappa$, increasing $\beta_1$ makes collective order more robust, lowering the threshold for the transition and sustaining polarization across a wider range of conditions. 
+Thus, while $\beta_1$ does contribute to swarming, its effect is secondary compared to the role of alignment strength.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{k_vs_b1.png}
-    \caption{Polarization across $\kappa$ vs $\beta_1$. Stronger social activation lowers the threshold for collective order.}
+    \caption{Polarization increases sharply with $\kappa$, and higher $\beta_1$ slightly reduces the threshold for collective order.}
     \label{fig:scan2}
 \end{figure}
 
 \section{Discussion}
 
-Our model differs from prior work in that it uses a continuous activity variable rather than a binary pause/go state. Biologically, this can be interpreted as a measure of \emph{locomotor readiness} or gradual acceleration: locusts do not always switch instantly between full pausing and full walking, but may exhibit intermediate levels of movement or responsiveness to neighbors. From a modeling perspective, this continuous formulation smooths out discontinuities, simplifies numerical analysis, and retains the threshold/saturation effects central to pause–and–go dynamics.  
+Our model differs from prior work in that it uses a continuous activity variable rather than a binary pause/go state. 
+Biologically, this can be interpreted as a measure of \emph{locomotor readiness} or gradual acceleration: locusts do not always switch instantly between full pausing and full walking, but may exhibit intermediate levels of movement or responsiveness to neighbors. 
+From a modeling perspective, this continuous formulation smooths out discontinuities, simplifies numerical analysis, and retains the threshold/saturation effects central to pause--and--go dynamics.  
 
-Robustness analysis confirms that swarming arises only when alignment strength and social activation are sufficiently large, consistent with prior studies. While our model does not capture all biological details (e.g., discrete pausing, escape-and-pursuit asymmetries), it highlights the minimal ingredients necessary for collective order. According to Ariel and Ayali (2015), such simplified models are valuable for understanding general principles of swarm dynamics, even if they abstract away some biological realism.
+Robustness analysis confirms that swarming arises only when alignment strength and social activation are sufficiently large, consistent with prior studies. 
+However, we observed that the effect of $\beta_1$ (social activation gain) was weaker than anticipated: while higher $\beta_1$ does slightly lower the threshold for collective order, the dominant factor is alignment strength $\kappa$. 
+This discrepancy may reflect the way neighbors were defined (equal weighting within radius $R$). 
+Future refinements, such as distance-weighted neighbor contributions, could yield a stronger dependence on $\beta_1$ and bring the model closer to biological observations.  
+
+While our model does not capture all biological details (e.g., discrete pausing, escape-and-pursuit asymmetries), it highlights the minimal ingredients necessary for collective order. 
+According to Ariel and Ayali (2015), such simplified models are valuable for understanding general principles of swarm dynamics, even if they abstract away some biological realism.
+
 
 \section{Conclusion}
 
 We implemented and analyzed a continuous-activity ODE model of locust swarming. Our work shows that simple local rules (alignment, social activation, and noise) are sufficient to generate robust collective motion. By situating this model within the broader literature, we demonstrate both how it simplifies existing frameworks and what insights it contributes. The approach also emphasizes the importance of robustness checks and parameter documentation, ensuring reproducibility and interpretability.
 
+\bibliographystyle{plain}
 \begin{thebibliography}{9}
 
-\bibitem{aidan2024pausing}
-Aidan Y., Bleichman I., Ayali A. (2024). Pausing to swarm: locust intermittent motion is instrumental for swarming-related visual processing. \emph{Biology Letters}, 2020230468.
-
-\bibitem{ariel2014pausego}
-Ariel G., Ophir Y., Levi S., Ben-Jacob E., Ayali A. (2014). Individual pause-and-go motion is instrumental to the formation and maintenance of swarms of marching locust nymphs. \emph{PLoS ONE}, 9(7): e101636.
+% reordered for numeric increasing order
 
 \bibitem{ariel2015locust}
 Ariel G., Ayali A. (2015). Locust collective motion and its modeling. \emph{PLoS Computational Biology}, 11(12): e1004522.
 
+\bibitem{ariel2014pausego}
+Ariel G., Ophir Y., Levi S., Ben-Jacob E., Ayali A. (2014). Individual pause-and-go motion is instrumental to the formation and maintenance of swarms of marching locust nymphs. \emph{PLoS ONE}, 9(7): e101636.
+
+\bibitem{aidan2024pausing}
+Aidan Y., Bleichman I., Ayali A. (2024). Pausing to swarm: locust intermittent motion is instrumental for swarming-related visual processing. \emph{Biology Letters}, 2020230468.
+
 \bibitem{bernoff2020agentbased}
 Bernoff A.J., Culshaw-Maurer M., Everett R.A., Hohn M.E., Strickland W.C., Weinburd J. (2020). Agent-based and continuous models of hopper bands for the Australian plague locust: How resource consumption mediates pulse formation and geometry. \emph{PLoS Computational Biology}, 16(5): e1007820.
-
-\bibitem{buhl2006disorder}
-Buhl J., Sumpter D.J.T., Couzin I.D., Hale J.J., Despland E., Miller E.R., Simpson S.J. (2006). From disorder to order in marching locusts. \emph{Science}, 312(5778): 1402–1406.
 
 \bibitem{czirok1999collective}
 Czirók A., Barabási A.-L., Vicsek T. (1999). Collective motion of self-propelled particles: kinetic phase transition in one dimension. \emph{Physical Review Letters}, 82(1): 209–212.
 
-\bibitem{fukuchi2019gait}
-Fukuchi C.A., Fukuchi R.K., Duarte M. (2019). Effects of walking speed on gait biomechanics in healthy participants: a systematic review and meta-analysis. \emph{Systematic Reviews}, 8: 153.
+\bibitem{vicsek1995novel}
+Vicsek T., Czirók A., Ben-Jacob E., Cohen I., Shochet O. (1995). Novel type of phase transition in a system of self-driven particles. \emph{Physical Review Letters}, 75(6): 1226–1229.
+
+\bibitem{buhl2006disorder}
+Buhl J., Sumpter D.J.T., Couzin I.D., Hale J.J., Despland E., Miller E.R., Simpson S.J. (2006). From disorder to order in marching locusts. \emph{Science}, 312(5778): 1402–1406.
 
 \bibitem{romanczuk2012active}
 Romanczuk P., Bär M., Ebeling W., Lindner B., Schimansky-Geier L. (2012). Active Brownian particles: From individual to collective stochastic dynamics. \emph{European Physical Journal - Special Topics}, 202(1): 1–162.
 
-\bibitem{vicsek1995novel}
-Vicsek T., Czirók A., Ben-Jacob E., Cohen I., Shochet O. (1995). Novel type of phase transition in a system of self-driven particles. \emph{Physical Review Letters}, 75(6): 1226–1229.
+\bibitem{fukuchi2019gait}
+Fukuchi C.A., Fukuchi R.K., Duarte M. (2019). Effects of walking speed on gait biomechanics in healthy participants: a systematic review and meta-analysis. \emph{Systematic Reviews}, 8: 153.
+
 
 \end{thebibliography}
 
