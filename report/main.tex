@@ -36,7 +36,10 @@ Ariel and Ayali (2015) review several frameworks for modeling locust collective 
     \item \textbf{Escape-and-pursuit (E\&P) models} \cite{romanczuk2012active}, motivated by the hypothesis that cannibalism drives collective motion. Here, individuals pursue conspecifics in front while escaping those approaching from behind. Although conceptually appealing, this mechanism has mixed empirical support in locusts.
 \end{itemize}
 
+We also note recent work such as \cite{bugswithfeatures}, which explores resilient collective motion inspired by nature and provides additional context for swarm robustness.
+
 Our approach is closest to the Vicsek/Czirók family of models but introduces an important modification. Instead of discrete pause/go states, we use a continuous-valued activity variable $a \in [0,1]$. This captures the same social dependence as the pause-and-go model but softens it into a smooth dynamical variable. The advantage is twofold: (i) it allows a natural biological interpretation as varying degrees of locomotor activation, and (ii) it yields a mathematically tractable ODE formulation suitable for robustness analysis.
+
 
 \section{Model Definition}
 
@@ -57,7 +60,8 @@ where $\tau_a$ (s) is the relaxation timescale, $\beta_0$ is the baseline bias, 
 
 Neighbors $n_i$ are defined as the number of individuals within a vision radius $R$ of agent $i$. In our implementation, each neighbor contributes equally, but one possible extension is to weight neighbors by inverse distance, reflecting stronger influence from nearby individuals.
 
-The sigmoid represents biologically plausible graded transitions: in many animal systems, movement does not engage instantly but ramps up. Speed, gait, and responsiveness transition continuously \cite{fukuchi2019gait}. Our model's continuous activity variable is inspired by such gradual biomechanical activation, and offers a realistic, smooth analogue to the binary pause--go concept.
+The sigmoid represents biologically plausible graded transitions: in many animal systems, movement does not engage instantly but ramps up. Speed, gait, and responsiveness transition continuously \cite{romanczuk2012active, fukuchi2019gait,couzin2005effective}. 
+Our model's continuous activity variable is inspired by such gradual biomechanical activation, and offers a realistic, smooth analogue to the binary pause--go concept.
 
 \subsection{Velocity}
 Speed varies between minimum and maximum values depending on activity:
@@ -149,7 +153,9 @@ Thus, while $\beta_1$ does contribute to swarming, its effect is secondary compa
 
 Our model differs from prior work in that it uses a continuous activity variable rather than a binary pause/go state. 
 Biologically, this can be interpreted as a measure of \emph{locomotor readiness} or gradual acceleration: locusts do not always switch instantly between full pausing and full walking, but may exhibit intermediate levels of movement or responsiveness to neighbors. 
-From a modeling perspective, this continuous formulation smooths out discontinuities, simplifies numerical analysis, and retains the threshold/saturation effects central to pause--and--go dynamics.  
+From a modeling perspective, this continuous formulation smooths out discontinuities, simplifies numerical analysis, and retains the threshold/saturation effects central to pause--and--go dynamics. 
+Similar continuous relaxations of discrete collective-motion rules have been explored in related contexts \cite{romanczuk2012active,bialek2012statistical}.
+
 
 Robustness analysis confirms that swarming arises only when alignment strength and social activation are sufficiently large, consistent with prior studies. 
 However, we observed that the effect of $\beta_1$ (social activation gain) was weaker than anticipated: while higher $\beta_1$ does slightly lower the threshold for collective order, the dominant factor is alignment strength $\kappa$. 
@@ -193,8 +199,19 @@ Buhl J., Sumpter D.J.T., Couzin I.D., Hale J.J., Despland E., Miller E.R., Simps
 \bibitem{romanczuk2012active}
 Romanczuk P., Bär M., Ebeling W., Lindner B., Schimansky-Geier L. (2012). Active Brownian particles: From individual to collective stochastic dynamics. \emph{European Physical Journal - Special Topics}, 202(1): 1–162.
 
+
+\bibitem{bugswithfeatures}
+Shefi O., Peleg O., Ayali A., Kaminka G. (2025). Bugs with Features: Resilient Collective Motion Inspired by Nature. \emph{Research Square}. doi:10.21203/rs.3.rs-6743719/v1
+
 \bibitem{fukuchi2019gait}
 Fukuchi C.A., Fukuchi R.K., Duarte M. (2019). Effects of walking speed on gait biomechanics in healthy participants: a systematic review and meta-analysis. \emph{Systematic Reviews}, 8: 153.
+
+\bibitem{couzin2005effective}
+Couzin I.D., Krause J., Franks N.R., Levin S.A. (2005). Effective leadership and decision-making in animal groups on the move. \emph{Nature}, 433: 513–516.
+
+\bibitem{bialek2012statistical}
+Bialek W., Cavagna A., Giardina I., et al. (2012). Statistical mechanics for natural flocks of birds. \emph{PNAS}, 109(13): 4786–4791.
+
 
 
 \end{thebibliography}
